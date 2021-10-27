@@ -1,16 +1,141 @@
-# This is a sample Python script.
+import flask
+import requests
+import json
+from Task import Task
+from flask import Flask, request, jsonify, url_for, abort, redirect, render_template
+from markupsafe import escape
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+my_header = {'Accept': 'text/html,application/xhtml+xml,'
+                       'application/xml;q=0.9,image/avif,'
+                       'image/webp,/;q=0.8',
+             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 '
+                           'Firefox/93.0'}
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def list_all_employees():
+    resp = requests.get("https://dummy.restapiexample.com/api/v1/employees",
+                        headers=my_header)
+    if resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+    json_response = resp.json()
+    print_all(json_response)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def list_employee():
+    emp_id = input("Enter id: ")
+    resp = requests.get("https://dummy.restapiexample.com/api/v1/employee/" + emp_id,
+                        headers=my_header)
+    if resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+    json_response = resp.json()
+    print_one(json_response)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+def create_employee():
+    employee_object = {"employee_name":[],"employee_salary":[],"employee_age":[]}
+    emp_name = input("Enter name: ")
+    emp_salary = input("Enter salary: ")
+    emp_age = input("Enter age: ")
+
+    employee_object["employee_name"].append(emp_name)
+    employee_object["employee_salary"].append(emp_salary)
+    employee_object["employee_age"].append(emp_age)
+
+    response = requests.post('http://dummy.restapiexample.com/api/v1/create',
+                             headers=my_header, data=employee_object)
+    if response.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+    json_resp = response.json()
+    print_one(json_resp)
+
+
+def update_employee():
+    emp_id = input("Enter id: ")
+    resp = requests.get("https://dummy.restapiexample.com/api/v1/employee/" + emp_id,
+                        headers=my_header)
+    if resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+    json_response = resp.json()
+    print_one(json_response)
+    emp_name = input("Enter new name: ")
+    json_response['data']['employee_name'] = emp_name
+    put_resp = requests.put("https://dummy.restapiexample.com/public/api/v1/update/" + emp_id,
+                            headers=my_header, data=json_response['data'])
+    if put_resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+    json_put_response = put_resp.json()
+    print_one(json_put_response)
+
+
+def delete_employee():
+    if resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+
+
+def show_average_salary():
+    if resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+
+
+def show_age_info():
+    if resp.status_code == 429:
+        print("[429]-> TOO MANY REQUESTS")
+        return
+
+
+def print_one(json_resp):
+    print("\nId: {}".format(json_resp['data']['id']))
+    print("\tName: {}".format(json_resp['data']['employee_name']))
+    print("\tSalary: {}".format(json_resp['data']['employee_salary']))
+    print("\tAge: {}".format(json_resp['data']['employee_age']))
+
+
+def print_all(json_resp):
+    for e in json_resp['data']:
+        print("\nId: {}".format(e['id']))
+        print("\tName: {}".format(e['employee_name']))
+        print("\tSalary: {}".format(e['employee_salary']))
+        print("\tAge: {}".format(e['employee_age']))
+
+
+user_input = 0
+
+while user_input != -1:
+    print("\nPlease choose an option:")
+    print("1. List all Employees")
+    print("2. Show Employee detail")
+    print("3. Create Employee")
+    print("4. Update Employee")
+    print("5. Delete Employee")
+    print("6. Show average salary")
+    print("7. Show age info")
+    user_input = input("\nEnter your selection-> ")
+    print(user_input)
+
+    if user_input == -1:
+        exit(0)
+
+    if str(user_input) == "1":
+        list_all_employees()
+    elif str(user_input) == "2":
+        list_employee()
+    elif str(user_input) == "3":
+        create_employee()
+    elif str(user_input) == "4":
+        update_employee()
+    elif str(user_input) == "5":
+        delete_employee()
+    elif str(user_input) == "6":
+        show_average_salary()
+    elif str(user_input) == "7":
+        show_age_info()
+
+
+
