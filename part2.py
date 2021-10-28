@@ -1,7 +1,6 @@
 import flask
 import requests
 import json
-from Task import Task
 from flask import Flask, request, jsonify, url_for, abort, redirect, render_template
 from markupsafe import escape
 
@@ -144,16 +143,20 @@ def print_one(json_resp):
 
 
 def print_all(json_resp):
+    counter = 1
     for e in json_resp['data']:
         print("\nId: {}".format(e['id']))
         print("\tName: {}".format(e['employee_name']))
         print("\tSalary: ${:,.2f}".format(e['employee_salary']))
         print("\tAge: {}".format(e['employee_age']))
+        if counter % 10 == 0:
+            enter = input("Enter to see 10 more > ")
+        counter += 1
 
 
 user_input = 0
 
-while user_input != -1:
+while str(user_input) != "-1":
     print("\nPlease choose an option:")
     print("1. List all Employees")
     print("2. Show Employee detail")
