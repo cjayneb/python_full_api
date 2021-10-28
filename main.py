@@ -5,6 +5,8 @@ from Task import Task
 from flask import Flask, request, jsonify, url_for, abort, redirect, render_template
 from markupsafe import escape
 
+# I KNOW THIS IS VERY SCUFFED BUT YEAH
+
 my_header = {'Accept': 'text/html,application/xhtml+xml,'
                        'application/xml;q=0.9,image/avif,'
                        'image/webp,/;q=0.8',
@@ -34,7 +36,7 @@ def list_employee():
 
 
 def create_employee():
-    employee_object = {"employee_name":[],"employee_salary":[],"employee_age":[]}
+    employee_object = {"employee_name": [], "employee_salary": [], "employee_age": []}
     emp_name = input("Enter name: ")
     emp_salary = input("Enter salary: ")
     emp_age = input("Enter age: ")
@@ -60,6 +62,9 @@ def update_employee():
         print("[429]-> TOO MANY REQUESTS")
         return
     json_response = resp.json()
+    if json_response['data'] is None:
+        print("[404]-> NO EMPLOYEE FOUND WITH ID: {}".format(emp_id))
+        return
     print_one(json_response)
     emp_name = input("Enter new name: ")
     json_response['data']['employee_name'] = emp_name
@@ -73,27 +78,68 @@ def update_employee():
 
 
 def delete_employee():
+    emp_id = input("Enter id: ")
+    resp = requests.delete("https://dummy.restapiexample.com/api/v1/delete/" + emp_id,
+                           headers=my_header)
+    print(resp)
     if resp.status_code == 429:
         print("[429]-> TOO MANY REQUESTS")
         return
+
+    print(resp.json())
 
 
 def show_average_salary():
+    resp = requests.get("https://dummy.restapiexample.com/api/v1/employees",
+                        headers=my_header)
+    count = 0
+    total_salary = 0
+
     if resp.status_code == 429:
         print("[429]-> TOO MANY REQUESTS")
         return
+
+    for e in resp.json()['data']:
+        count += 1
+        total_salary += e['employee_salary']
+
+    average = total_salary / count
+
+    print("Average salary: ${:,.2f}".format(average))
 
 
 def show_age_info():
+    min_age = int(input("Enter minimum age: "))
+    max_age = int(input("Enter maximum age: "))
+
+    total_salary = 0
+    employees = []
+    lowest_salary = 10000000000.0
+    highest_salary = 0.0
+    resp = requests.get("https://dummy.restapiexample.com/api/v1/employees",
+                        headers=my_header)
     if resp.status_code == 429:
         print("[429]-> TOO MANY REQUESTS")
         return
+
+    for e in resp.json()['data']:
+        if min_age <= e['employee_age'] <= max_age:
+            if e['employee_salary'] < lowest_salary:
+                lowest_salary = e['employee_salary']
+            if e['employee_salary'] > highest_salary:
+                highest_salary = e['employee_salary']
+            total_salary += e['employee_salary']
+            employees.append(e)
+
+    print("Lowest salary: ${:,.2f}".format(lowest_salary))
+    print("Highest salary: ${:,.2f}".format(highest_salary))
+    print("Average salary: ${:,.2f}".format(total_salary/len(employees)))
 
 
 def print_one(json_resp):
     print("\nId: {}".format(json_resp['data']['id']))
     print("\tName: {}".format(json_resp['data']['employee_name']))
-    print("\tSalary: {}".format(json_resp['data']['employee_salary']))
+    print("\tSalary: ${:,.2f}".format(json_resp['data']['employee_salary']))
     print("\tAge: {}".format(json_resp['data']['employee_age']))
 
 
@@ -101,7 +147,7 @@ def print_all(json_resp):
     for e in json_resp['data']:
         print("\nId: {}".format(e['id']))
         print("\tName: {}".format(e['employee_name']))
-        print("\tSalary: {}".format(e['employee_salary']))
+        print("\tSalary: ${:,.2f}".format(e['employee_salary']))
         print("\tAge: {}".format(e['employee_age']))
 
 
@@ -136,6 +182,3 @@ while user_input != -1:
         show_average_salary()
     elif str(user_input) == "7":
         show_age_info()
-
-
-
